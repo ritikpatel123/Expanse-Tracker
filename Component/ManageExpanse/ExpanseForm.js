@@ -1,33 +1,59 @@
 //import liraries
 import React, { useState } from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, Alert } from "react-native";
 import Input from "./Input";
 import Button from "../UI/Button";
+import { GlobalStyles } from "../../constants/styles";
 
 // create a component
-const ExpanseForm = ({onCancle, onSubmit,isEditing,deafultValues}) => {
-  const [inputValues, setInputValues] = useState({
-    amount: deafultValues?deafultValues.amount.toString():'',
-    date: deafultValues?deafultValues.date.toISOString().slice(0,10):'',
-    description: deafultValues?deafultValues.description.toString():'',
+const ExpanseForm = ({ onCancle, onSubmit, isEditing, deafultValues }) => {
+  const [inputs, setInputs] = useState({
+    amount: {
+      value: deafultValues ? deafultValues.amount.toString() : "",
+      isValid: true,
+    },
+    date: {
+      value: deafultValues ? deafultValues.date.toISOString().slice(0, 10) : "",
+      isValid:true,
+    },
+    description: {
+      value: deafultValues ? deafultValues.description.toString() : "",
+      isValid:true,
+    },
   });
   function inputChangeHandler(intputIdentifier, enteredvalue) {
-    setInputValues((prev) => {
+    setInputs((currInputs) => {
       return {
-        ...prev,
-        [intputIdentifier]: enteredvalue,
-      };
+        ...currInputs,
+        [intputIdentifier]: {value:enteredvalue, isValid:true}
+      }; 
     });
   }
-function submitHandler(){
-  const expanseData ={
-    amount:+inputValues.amount,
-    date:new Date(inputValues.date),
-    description:inputValues.description,
-  }
+ 
+  function submitHandler() {
+    const expanseData = {
+      amount: +inputs.amount.value,
+      date: new Date(inputs.date.value),
+      description: inputs.description.value,
+    };
+    const amountIsValid = !isNaN(expanseData.amount) && expanseData.amount > 0;
+    const dateIsValid = expanseData.date.toString() !== " Invalid date";
+    const descriptionIsValid = expanseData.description.trim().length > 0;
 
-  onSubmit(expanseData);
-};
+    if (!amountIsValid || !dateIsValid || !descriptionIsValid) {
+      Alert.alert("Invalid Input", "Check your Input values");
+      setInputs((currInputs)=>{
+        return {
+        amount:{value:currInputs.amount.value,isValid:amountIsValid},
+        date:{value:currInputs.date.value,isValid:dateIsValid},
+        description:{value:currInputs.description.value,isValid:descriptionIsValid},
+        }
+      })
+      return;
+    }
+    onSubmit(expanseData); 
+  }
+  const formIsValid= !inputs.date.isValid ||!inputs.description.isValid ||!inputs.amount.isValid;
   return (
     <View>
       <Text style={styles.title}>Your Expanse</Text>
@@ -35,34 +61,37 @@ function submitHandler(){
         <Input
           style={styles.rowinput}
           label={"Amount"}
+          inValid={!inputs.amount.isValid}
           TextInputConfig={{
             keyboardType: "decimal-pad",
             onChangeText: inputChangeHandler.bind(this, "amount"),
-            value: inputValues.amount,
+            value: inputs.amount.value,
           }}
         />
 
         <Input
           label={"Date"}
           style={styles.rowinput}
+          inValid={!inputs.date.isValid}
           TextInputConfig={{
             placeholder: "YYYY-MM-DD",
             maxLength: 10,
             onChangeText: inputChangeHandler.bind(this, "date"),
-            value: inputValues.date,
+            value: inputs.date.value,
           }}
         />
       </View>
       <Input
         label={"Description"}
+        inValid={!inputs.description.isValid}
         TextInputConfig={{
           multiline: true,
           // autoCorrect:false
           onChangeText: inputChangeHandler.bind(this, "description"),
-          value: inputValues.description,
+          value: inputs.description.value,
         }}
       />
-
+       {formIsValid && (<Text style={styles.errortext}>Invalid Input Values -Please check your entered data!</Text>)}
       <View style={styles.buttons}>
         <Button style={styles.button} mode="flat" onPress={onCancle}>
           Cancle
@@ -85,6 +114,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#2c3e50",
   },
+  errortext:{
+    textAlign:'center',
+    color:GlobalStyles.colors.error500,
+    margin:8
+
+  }, 
   buttons: {
     flexDirection: "row",
     justifyContent: "center",
@@ -108,6 +143,7 @@ const styles = StyleSheet.create({
   rowinput: {
     flex: 1,
   },
+ 
 });
 
 export default ExpanseForm;
