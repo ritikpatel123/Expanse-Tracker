@@ -41,7 +41,7 @@ const ExpanseForm = ({ onCancle, onSubmit, isEditing, deafultValues }) => {
     const descriptionIsValid = expanseData.description.trim().length > 0;
 
     if (!amountIsValid || !dateIsValid || !descriptionIsValid) {
-      Alert.alert("Invalid Input", "Check your Input values");
+
       setInputs((currInputs)=>{
         return {
         amount:{value:currInputs.amount.value,isValid:amountIsValid},
@@ -83,7 +83,7 @@ const ExpanseForm = ({ onCancle, onSubmit, isEditing, deafultValues }) => {
       </View>
       <Input
         label={"Description"}
-        inValid={!inputs.description.isValid}
+        inValid={!inputs.description .isValid}
         TextInputConfig={{
           multiline: true,
           // autoCorrect:false

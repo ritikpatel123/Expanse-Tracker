@@ -7,9 +7,13 @@ import {useNavigation} from '@react-navigation/native'
 
 const ExpenseItem = ({id,description,amount,date}) => {
     const navigation=useNavigation();
+    
     const expansePressHandler=()=>{
+        // console.log(key," ",description," ",amount," ",date)
     navigation.navigate('manageExpanses',{
+       
         expenseId:id,
+        
     })
 
     };

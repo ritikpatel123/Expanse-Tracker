@@ -1,18 +1,35 @@
-import React, { useState ,useContext} from 'react'
+import React, { useState ,useContext, useEffect} from 'react'
 import { Text,StyleSheet, View } from 'react-native'
 import ExpansesOutput from '../Component/ExpansesOutput/ExpansesOutput'
 import { ExpenseContext } from '../store/expanses-context'
 import { GetDaysMinusDays } from '../util/Date'
+import { fetchExpanse } from '../util/http'
+import LoadingOverlay from '../Component/UI/LoadingOverlay';
 const Recent = () => {
-  
-    // const [recentExpanseList,setRecentExpanseList]=useState([])
-    // const [totalExpanse,setTotalExpance]=useState(0)
-    const ExpensesCtx=useContext(ExpenseContext);
+  const [isFetching,setisFetching]=useState(false);
+  const ExpensesCtx=useContext(ExpenseContext);
+
+
+    useEffect(()=>{ 
+      async function getExpanse(){
+      setisFetching(true)
+      const response= await fetchExpanse();
+      setisFetching(false)
+      ExpensesCtx.setExpanse(response);
+
+    }  
+      getExpanse();
+    },[])
+    if(isFetching) {
+      return <LoadingOverlay/>
+    }
+
     const recentExpenses=ExpensesCtx.expenses.filter((expense)=>{
          const today=new Date();
          const date7DaysAgo=GetDaysMinusDays(today,7);
          return expense.date > date7DaysAgo;
     })
+   
 
   return (
     <ExpansesOutput 

@@ -1,16 +1,19 @@
-import React, { useContext, useLayoutEffect } from "react";
+import React, { useContext, useLayoutEffect, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import IconButtons from "../Component/UI/IconButtons";
 import { GlobalStyles } from "../constants/styles";
 import Button from "../Component/UI/Button";
 import { ExpenseContext } from "../store/expanses-context";
 import ExpanseForm from "../Component/ManageExpanse/ExpanseForm.js";
+import {storeExpanse,updateExpense,deleteExpense} from "../util/http.js";
+import LoadingOverlay from "../Component/UI/LoadingOverlay.js";
 
 const ManageExpanses = ({ route, navigation }) => {
+  const[isUpdating,SetIsUpdating] =useState(true);
   const expensesCtx = useContext(ExpenseContext);
   const editedExpenseId = route.params?.expenseId;
+ 
   const isEditing = !!editedExpenseId;
-
   const selectedExpanse = expensesCtx.expenses.find(
     (expense) => expense.id === editedExpenseId
   );
@@ -21,24 +24,39 @@ const ManageExpanses = ({ route, navigation }) => {
     });
   }, [isEditing, navigation]);
 
-  function deleteExpanseHandler() {
+  async function deleteExpanseHandler() {
+
     expensesCtx.deleteExpense(editedExpenseId);
+    SetIsUpdating(true);
+    await deleteExpense(editedExpenseId);
+    SetIsUpdating(false);
     navigation.goBack();
   }
 
   function cancleHandler() {
     navigation.goBack();
   }
-  function confirmHandler(expanseData) {
+  async function confirmHandler(expanseData) {
     // console.log(expensesCtx); // Check if deleteExpense function exists
     // console.log(editedExpenseId);
     if (isEditing) {
+      
       expensesCtx.updateExpense(editedExpenseId, expanseData);
+      SetIsUpdating(true);
+     await updateExpense(editedExpenseId,expanseData);
+     SetIsUpdating(false);
+
     } else {
-      expensesCtx.addExpense(expanseData);
+     const id= await storeExpanse(expanseData); 
+      expensesCtx.addExpense({...expanseData,id:id});
+
     }
     navigation.goBack();
   }
+
+   if(isUpdating) {
+    return <LoadingOverlay/>
+   }
   return (
     <View style={styles.container}>
       <ExpanseForm
@@ -59,7 +77,7 @@ const ManageExpanses = ({ route, navigation }) => {
         </View>
       )}
     </View>
-  );
+  ); 
 };
 
 export default ManageExpanses;
