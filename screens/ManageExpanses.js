@@ -5,14 +5,16 @@ import { GlobalStyles } from "../constants/styles";
 import Button from "../Component/UI/Button";
 import { ExpenseContext } from "../store/expanses-context";
 import ExpanseForm from "../Component/ManageExpanse/ExpanseForm.js";
-import {storeExpanse,updateExpense,deleteExpense} from "../util/http.js";
+import { storeExpanse, updateExpense, deleteExpense } from "../util/http.js";
 import LoadingOverlay from "../Component/UI/LoadingOverlay.js";
+import ErrorOverlay from "../Component/UI/ErrorOverlay.js";
 
 const ManageExpanses = ({ route, navigation }) => {
-  const[isUpdating,SetIsUpdating] =useState(true);
+  const [isUpdating, SetIsUpdating] = useState(false);
+  const [error, setError] = useState();
   const expensesCtx = useContext(ExpenseContext);
   const editedExpenseId = route.params?.expenseId;
- 
+
   const isEditing = !!editedExpenseId;
   const selectedExpanse = expensesCtx.expenses.find(
     (expense) => expense.id === editedExpenseId
@@ -25,38 +27,51 @@ const ManageExpanses = ({ route, navigation }) => {
   }, [isEditing, navigation]);
 
   async function deleteExpanseHandler() {
-
-    expensesCtx.deleteExpense(editedExpenseId);
-    SetIsUpdating(true);
-    await deleteExpense(editedExpenseId);
-    SetIsUpdating(false);
-    navigation.goBack();
+    try {
+      expensesCtx.deleteExpense(editedExpenseId);
+      SetIsUpdating(true);
+      await deleteExpense(editedExpenseId);
+      SetIsUpdating(false);
+      navigation.goBack();
+    } catch (error) {
+      setError("unable to delete the item try again!");
+    }
   }
 
   function cancleHandler() {
     navigation.goBack();
   }
   async function confirmHandler(expanseData) {
-    // console.log(expensesCtx); // Check if deleteExpense function exists
-    // console.log(editedExpenseId);
-    if (isEditing) {
-      
-      expensesCtx.updateExpense(editedExpenseId, expanseData);
-      SetIsUpdating(true);
-     await updateExpense(editedExpenseId,expanseData);
-     SetIsUpdating(false);
+    try {
+      if (isEditing) {
+        expensesCtx.updateExpense(editedExpenseId, expanseData);
+        SetIsUpdating(true);
+        await updateExpense(editedExpenseId, expanseData);
+        SetIsUpdating(false);
+      } else {
+        SetIsUpdating(true);
+        const id = await storeExpanse(expanseData);
 
-    } else {
-     const id= await storeExpanse(expanseData); 
-      expensesCtx.addExpense({...expanseData,id:id});
-
+        expensesCtx.addExpense({ ...expanseData, id: id });
+        navigation.goBack();
+      }
+    } catch (error) {
+      setError("Could not save data try again later ");
+      SetIsUpdating(false);
     }
-    navigation.goBack();
   }
 
-   if(isUpdating) {
-    return <LoadingOverlay/>
-   }
+  const errorHandle = () => { 
+    setError(null);
+  };
+
+  if (error && !isUpdating) {
+    <ErrorOverlay message={error} onConfirm={errorHandle} />;
+  }
+
+  if (isUpdating) {
+    return <LoadingOverlay />;
+  }
   return (
     <View style={styles.container}>
       <ExpanseForm
@@ -77,7 +92,7 @@ const ManageExpanses = ({ route, navigation }) => {
         </View>
       )}
     </View>
-  ); 
+  );
 };
 
 export default ManageExpanses;

@@ -38,7 +38,7 @@ export function updateExpense(id,expanseData) {
 }
 
 export function deleteExpense(id) {
-   return axios.put(BACKEND_URL+`/expanses/${id}.json`)
+   return axios.delete(BACKEND_URL+`/expanses/${id}.json`)
 }
 
 

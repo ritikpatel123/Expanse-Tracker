@@ -5,21 +5,36 @@ import { ExpenseContext } from '../store/expanses-context'
 import { GetDaysMinusDays } from '../util/Date'
 import { fetchExpanse } from '../util/http'
 import LoadingOverlay from '../Component/UI/LoadingOverlay';
+import ErrorOverlay from '../Component/UI/ErrorOverlay'
 const Recent = () => {
   const [isFetching,setisFetching]=useState(false);
+  const [error,setError]=useState();
   const ExpensesCtx=useContext(ExpenseContext);
 
 
     useEffect(()=>{ 
       async function getExpanse(){
       setisFetching(true)
+      try{
       const response= await fetchExpanse();
-      setisFetching(false)
       ExpensesCtx.setExpanse(response);
-
+      } catch(error) {
+        setError(error)
+      }
+      setisFetching(false) 
     }  
+
       getExpanse();
     },[])
+   
+    const errorHandle=()=>{
+      setError(null); 
+    }
+
+   if(error && !isFetching) {
+       <ErrorOverlay message={error}  onConfirm={errorHandle}/>
+   } 
+
     if(isFetching) {
       return <LoadingOverlay/>
     }
